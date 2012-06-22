@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <title></title>
+
+	<meta charset="utf-8">
+    <script type="text/javascript">
+    
+    var theCanvas;
+    var ctx;
+    
+    var colourCanvas;
+    var colourCtx; 
+    
+	var imageData;
+	var colourData;
+	
+	function onBodyLoad(){		
+		// draw images 
+		theCanvas = document.getElementById('theCanvas');
+		ctx = theCanvas.getContext('2d');
+		
+		colourCanvas = document.getElementById('colourCanvas');
+		colourCtx = colourCanvas.getContext('2d');
+		
+		// take the image and use a scaled down version so we loop through less pixels
+		theCanvas.width = document.images[0].width/8;
+		theCanvas.height = document.images[0].height/8;
+		ctx.drawImage(document.images[0],0,0,theCanvas.width, theCanvas.height);
+		imageData = ctx.getImageData(0,0,document.images[0].width, document.images[0].height);
+		
+		// use threshold property to control how many colours are outputted
+		colourData = generateColourPalette(imageData, 128);
+		
+		// sort it and spit it out
+		colourData.sort(function(a,b){return b.count-a.count});
+		outputColourPalette(colourData);
+	}
+    
+    var generateColourPalette = function(img, threshold){ 	
+    	var colourOut = [];
+    	var currentThreshold = 0;
+    	var similar = false;
+    	
+    	var width = img.width, height = img.height;
+        for(var i=0;i<width;i++){
+            for(var j=0;j<height;j++){
+                var index = (i+j*width)*4;
+				var imageRed = img.data[index];
+				var imageGreen = img.data[index+1];
+				var imageBlue = img.data[index+2];
+				
+				if(colourOut.length==0){
+					colourOut.push({	
+						red:imageRed,			
+						green:imageGreen,
+						blue:imageBlue,
+						count: 1
+					});
+				}else{
+					similar = false;
+					for(var k=0;k<colourOut.length;k++){
+						currentThreshold = 0;
+						// is there a better way to do this?
+						// I feel like I could be losing some info by just adding like this
+						currentThreshold += Math.abs(colourOut[k].red-imageRed);
+						currentThreshold += Math.abs(colourOut[k].green-imageGreen);
+						currentThreshold += Math.abs(colourOut[k].blue-imageBlue);
+						
+						// another similiar colour found 
+						if(currentThreshold<threshold){
+							similar = true;
+							colourOut[k].count += 1; 
+						}
+
+					}
+					if(!similar){
+						colourOut.push({	
+							red:imageRed,			
+							green:imageGreen,
+							blue:imageBlue,
+							count: 1
+						});						
+					}
+				}
+            }
+        }  
+        return colourOut;
+    }
+    
+    
+    var outputColourPalette = function(colourIn){
+    	colourCanvas.width = colourIn.length*25;
+    	for(var k=0;k<colourIn.length;k++){
+			colourCtx.fillStyle = 'rgb(' + colourIn[k].red + ',' +   
+								   colourIn[k].green + ',' + colourIn[k].blue+')';  
+			colourCtx.fillRect(k*25,0,25,25);  
+		}
+    }
+
+    
+/*
+	function onDeviceReady()
+	{
+
+	}
+   
+*/
+
+     
+    </script>
+  </head>
+  <body onload="onBodyLoad()"> 
+  	<img id="img1" src="demo.jpg"  />
+    <canvas id="theCanvas" style="display:none">
+        
+    </canvas>
+    <canvas id="colourCanvas">
+        
+    </canvas>    
+    
+  </body>
+</html>
