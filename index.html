@@ -37,7 +37,7 @@
 		imageData = ctx.getImageData(0,0,document.images[0].width, document.images[0].height);
 		
 		
-		/*
+		
 		medianCanvas.width = theCanvas.width;
 		medianCanvas.height = theCanvas.height;
 		imageOut = medianCtx.createImageData(medianCanvas.width, medianCanvas.height);
@@ -45,13 +45,13 @@
 		medianFilter(imageOut, imageOut, 3);
 		medianFilter(imageOut, imageOut, 3);
 		medianCtx.putImageData(imageOut,0,0);
-		*/
+		
 	
 		// sort it and spit it out
 		colourCanvas.width = medianCanvas.width;
 		colourCanvas.height = medianCanvas.height;
 		
-		//imageData = medianCtx.getImageData(0,0,medianCanvas.width, medianCanvas.height);
+		imageData = medianCtx.getImageData(0,0,medianCanvas.width, medianCanvas.height);
 		colourData = generateColourPalette(imageData, 100);
 		
 		colourData.sort(function(a,b){return b.count-a.count});
