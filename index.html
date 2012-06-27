@@ -41,9 +41,9 @@
 		medianCanvas.width = theCanvas.width;
 		medianCanvas.height = theCanvas.height;
 		imageOut = medianCtx.createImageData(medianCanvas.width, medianCanvas.height);
-		medianFilter(imageData, imageOut, 3);
-		medianFilter(imageOut, imageOut, 3);
-		medianFilter(imageOut, imageOut, 3);
+		medianFilter(imageData, imageOut, 5);
+		medianFilter(imageOut, imageOut, 5);
+
 		medianCtx.putImageData(imageOut,0,0);
 		
 	
@@ -52,11 +52,11 @@
 		colourCanvas.height = medianCanvas.height;
 		
 		imageData = medianCtx.getImageData(0,0,medianCanvas.width, medianCanvas.height);
-		colourData = generateColourPalette(imageData, 100);
+		colourData = generateColourPalette(imageData, 50);
 		
 		colourData.sort(function(a,b){return b.count-a.count});
 
-		outputColourPalette(colourData);
+		outputColourPalette(colourData, 6);
 	}
 	
 	//30% of the red value, 59% of the green value, and 11% blue
@@ -72,35 +72,12 @@
             for(var j=0;j<height;j++){
 				
 				colourHistogram = [];
-				var oldWindowSize = windowSize;
 				var radius = Math.floor(windowSize/2);
-				var windowRight = i+radius;
-				var windowBottom = j+radius;
 				var offsetWidth = width - (i+windowSize);
 				var offsetHeight = height - (j+windowSize);
 				var windowLeft = 0;
 				var windowTop = 0;
-				/*
-				if(i<radius){
-					windowSize = radius - i;
-					windowLeft = 0;
-				}else if(windowRight>width){
-					windowLeft = i - radius;
-					windowSize = width - windowLeft;
-				}else{
-					windowLeft = i - radius;
-				}
 
-				if(j<radius){
-					windowSize = radius - j;
-					windowTop = 0;
-				}else if(windowBottom>height){
-					windowTop = j - radius;
-					windowSize = height - windowTop;
-				}else{
-					windowTop = j - radius;
-				}
-				*/
 				for(var k=0;k<windowSize;k++){
 					for(var l=0;l<windowSize;l++){
 
@@ -119,8 +96,17 @@
 							windowTop = j + l;
 						}
 						
-						windowLeft -= radius;
-						windowTop -= radius;
+						if(windowLeft - radius > 0) {
+							windowLeft -= radius;
+						}else{
+							windowLeft = 0;
+						}
+						
+						if(windowTop - radius > 0){
+							windowTop -= radius;
+						}else{
+							windowTop = 0;
+						}
 						
 						var index = (windowLeft+windowTop*width)*4;
 						// hope that intensity corresponds to the colour in the image closely enough
@@ -146,7 +132,6 @@
 				imgOut.data[imageOutIndex+1] = medianColour.green;
 				imgOut.data[imageOutIndex+2] = medianColour.blue;
 				imgOut.data[imageOutIndex+3] = 255;
-				windowSize = oldWindowSize;
             }
         }  
     }
@@ -173,17 +158,23 @@
 					});
 				}else{
 					similar = false;
+						//30% of the red value, 59% of the green value, and 11% blue
 					for(var k=0;k<colourOut.length;k++){
 						currentThreshold = 0;
 						// is there a better way to do this?
 						// I feel like I could be losing some info by just adding like this
-						currentThreshold += Math.abs(colourOut[k].red-imageRed);
-						currentThreshold += Math.abs(colourOut[k].green-imageGreen);
-						currentThreshold += Math.abs(colourOut[k].blue-imageBlue);
+						
+						currentThreshold += Math.abs((colourOut[k].red-imageRed)*0.3);
+						currentThreshold += Math.abs((colourOut[k].green-imageGreen)*0.59);
+						currentThreshold += Math.abs((colourOut[k].blue-imageBlue)*0.3);
 						
 						// another similiar colour found 
+						// average out the colours
 						if(currentThreshold<threshold){
 							similar = true;
+							colourOut.red = Math.floor((colourOut[k].red+imageRed)/2);
+							colourOut.green = Math.floor((colourOut[k].green+imageGreen)/2);
+							colourOut.blue = Math.floor((colourOut[k].green+imageBlue)/2);
 							colourOut[k].count += 1; 
 						}
 
@@ -204,9 +195,9 @@
     }
     
     
-    var outputColourPalette = function(colourIn){
+    var outputColourPalette = function(colourIn, maxNumColours){
     	colourCanvas.width = colourIn.length*25;
-    	for(var k=0;k<colourIn.length;k++){
+    	for(var k=0;k<maxNumColours;k++){
 			colourCtx.fillStyle = 'rgb(' + colourIn[k].red + ',' +   
 								   colourIn[k].green + ',' + colourIn[k].blue+')';  
 			colourCtx.fillRect(k*25,0,25,25);  
@@ -226,7 +217,7 @@
     </script>
   </head>
   <body onload="onBodyLoad()"> 
-  	<img id="img1" src="flower3.png"  style="display:none"/>
+  	<img id="img1" src="flower2.png"  style="display:none"/>
 
     <canvas id="theCanvas">
         
