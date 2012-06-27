@@ -9,33 +9,147 @@
     var theCanvas;
     var ctx;
     
+    var medianCanvas;
+    var medianCtx; 
+    
     var colourCanvas;
-    var colourCtx; 
+    var colourCtx;
     
 	var imageData;
+	var imageOut;
 	var colourData;
-	
+
 	function onBodyLoad(){		
 		// draw images 
 		theCanvas = document.getElementById('theCanvas');
 		ctx = theCanvas.getContext('2d');
 		
+		medianCanvas = document.getElementById('medianCanvas');
+		medianCtx = medianCanvas.getContext('2d');
+
 		colourCanvas = document.getElementById('colourCanvas');
 		colourCtx = colourCanvas.getContext('2d');
 		
 		// take the image and use a scaled down version so we loop through less pixels
-		theCanvas.width = document.images[0].width/8;
-		theCanvas.height = document.images[0].height/8;
+		theCanvas.width = document.images[0].width;
+		theCanvas.height = document.images[0].height;
 		ctx.drawImage(document.images[0],0,0,theCanvas.width, theCanvas.height);
 		imageData = ctx.getImageData(0,0,document.images[0].width, document.images[0].height);
 		
-		// use threshold property to control how many colours are outputted
-		colourData = generateColourPalette(imageData, 128);
 		
+		/*
+		medianCanvas.width = theCanvas.width;
+		medianCanvas.height = theCanvas.height;
+		imageOut = medianCtx.createImageData(medianCanvas.width, medianCanvas.height);
+		medianFilter(imageData, imageOut, 3);
+		medianFilter(imageOut, imageOut, 3);
+		medianFilter(imageOut, imageOut, 3);
+		medianCtx.putImageData(imageOut,0,0);
+		*/
+	
 		// sort it and spit it out
+		colourCanvas.width = medianCanvas.width;
+		colourCanvas.height = medianCanvas.height;
+		
+		//imageData = medianCtx.getImageData(0,0,medianCanvas.width, medianCanvas.height);
+		colourData = generateColourPalette(imageData, 100);
+		
 		colourData.sort(function(a,b){return b.count-a.count});
+
 		outputColourPalette(colourData);
 	}
+	
+	//30% of the red value, 59% of the green value, and 11% blue
+    var medianFilter = function(imgIn, imgOut, windowSize){ 		
+    	var colourHistogram = [];
+
+    	var edgeX = Math.floor(windowSize/2);
+    	var edgeY = Math.floor(windowSize/2);
+    	
+    	//var width = imgIn.width-windowSize, height = imgIn.height-windowSize;
+    	var width = imgIn.width, height = imgIn.height;
+        for(var i=0;i<width;i++){
+            for(var j=0;j<height;j++){
+				
+				colourHistogram = [];
+				var oldWindowSize = windowSize;
+				var radius = Math.floor(windowSize/2);
+				var windowRight = i+radius;
+				var windowBottom = j+radius;
+				var offsetWidth = width - (i+windowSize);
+				var offsetHeight = height - (j+windowSize);
+				var windowLeft = 0;
+				var windowTop = 0;
+				/*
+				if(i<radius){
+					windowSize = radius - i;
+					windowLeft = 0;
+				}else if(windowRight>width){
+					windowLeft = i - radius;
+					windowSize = width - windowLeft;
+				}else{
+					windowLeft = i - radius;
+				}
+
+				if(j<radius){
+					windowSize = radius - j;
+					windowTop = 0;
+				}else if(windowBottom>height){
+					windowTop = j - radius;
+					windowSize = height - windowTop;
+				}else{
+					windowTop = j - radius;
+				}
+				*/
+				for(var k=0;k<windowSize;k++){
+					for(var l=0;l<windowSize;l++){
+
+						// change the windowBox's coords when we get close to the edge
+						// make sure to never go pass the edge of the image
+						
+						if(offsetWidth < 0 ){
+							windowLeft = k + i + offsetWidth;
+						}else{
+							windowLeft = k + i;
+						}
+						
+						if(offsetHeight < 0){
+							windowTop = j + l + offsetHeight
+						}else{
+							windowTop = j + l;
+						}
+						
+						windowLeft -= radius;
+						windowTop -= radius;
+						
+						var index = (windowLeft+windowTop*width)*4;
+						// hope that intensity corresponds to the colour in the image closely enough
+						// to generate a good pallette
+						var imageRed = imgIn.data[index];
+						var imageGreen = imgIn.data[index+1];
+						var imageBlue = imgIn.data[index+2];
+						var intensity = imageRed*0.3 + imageGreen*.59 + imageBlue*0.1;
+						colourHistogram.push({	
+							intensity:intensity,
+							red: imageRed,
+							green:imageGreen,
+							blue:imageBlue
+						});
+					}
+				}
+				
+				var imageOutIndex = (i+j*width)*4;
+
+				colourHistogram.sort(function(a,b){return a.intensity-b.intensity});
+				var medianColour = colourHistogram[Math.floor(colourHistogram.length/2)];
+				imgOut.data[imageOutIndex] = medianColour.red;
+				imgOut.data[imageOutIndex+1] = medianColour.green;
+				imgOut.data[imageOutIndex+2] = medianColour.blue;
+				imgOut.data[imageOutIndex+3] = 255;
+				windowSize = oldWindowSize;
+            }
+        }  
+    }
     
     var generateColourPalette = function(img, threshold){ 	
     	var colourOut = [];
@@ -83,6 +197,7 @@
 						});						
 					}
 				}
+				
             }
         }  
         return colourOut;
@@ -111,13 +226,18 @@
     </script>
   </head>
   <body onload="onBodyLoad()"> 
-  	<img id="img1" src="demo.jpg"  />
-    <canvas id="theCanvas" style="display:none">
+  	<img id="img1" src="flower3.png"  style="display:none"/>
+
+    <canvas id="theCanvas">
         
     </canvas>
-    <canvas id="colourCanvas">
+
+    <canvas id="medianCanvas">
         
     </canvas>    
-    
+	<br />
+    <canvas id="colourCanvas">
+        
+    </canvas>      
   </body>
 </html>
