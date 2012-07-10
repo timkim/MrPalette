@@ -49,6 +49,11 @@ function MrPalette(){
         this.colourOutCanvas = theCanvas;
         
         theCanvas.width = colourData.length*25;
+        
+        if(maxNumColours > colourData.length){
+            maxNumColours = colourData.length;
+        }
+        
         for(var i=0;i<maxNumColours;i++){
             theCtx.fillStyle = 'rgb(' + colourData[i].red + ',' +   
                                    colourData[i].green + ',' + colourData[i].blue+')';  
