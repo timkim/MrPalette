@@ -8,19 +8,26 @@
     
     <meta charset="utf-8">
     <script type="text/javascript">
-    
-    function onBodyLoad(){
-       
-    }
-    
     </script>
 </head>
-<body onload="onBodyLoad()"> 
-    <div id="dropContainer"> 
-        <div id="picContainer"> </div>
+<body> 
+    <div id="mainContainer">
+        <h1>MrPalette</h1>
+        <div id="dropContainer"> 
+            <div id="picContainer"> </div>
+        </div>
+        
+        <div id="instructionContainer">Drag and drop images in the box above to get the colour palette of the image.</div>
+         
+        <div id="controls"> 
+            
+            <button id="generateButton" type="button">Generate Palette</button>
+        </div>
+        
+        <div id="colourOut"> </div>
+        
+        <div id="notes"><p>Author: Tim Kim/@timkim</p></div>
     </div>
-     <div id="instructionContainer">Drag and drop images in the box above.</div>
-     
     <script>
         // taken from and modified slightly: http://www.html5rocks.com/en/tutorials/file/dndfiles/#toc-selecting-files-dnd
         function handleFileSelect(evt) {
@@ -46,16 +53,7 @@
                     document.getElementById('picContainer').innerHTML = span.innerHTML;                   
                 };
             })(f);
-        
-            reader.onloadend = function(){   
-                var myPalette = new MrPalette();
-                var myPic = document.images[0];
-                var options = {
-                    threshold: 50,
-                    maxNumColours: 8
-                }
-                myPalette.generateColourPalette(myPic, options);              
-            }
+            
             // Read in the image file as a data URL.
             reader.readAsDataURL(f);            
             }
@@ -69,7 +67,26 @@
         
         var dropContainer = document.getElementById('dropContainer');
         dropContainer.addEventListener('dragover', handleDragOver, false);
-        dropContainer.addEventListener('drop', handleFileSelect, false);  
+        dropContainer.addEventListener('drop', handleFileSelect, false); 
+        
+        var generateButton = document.getElementById('generateButton');
+        generateButton.onclick = function(){
+            var colourOut = document.getElementById('colourOut');
+            if(colourOut.hasChildNodes()){
+                while(colourOut.childNodes.length>0){
+                    colourOut.removeChild(colourOut.firstChild);
+                }
+            }
+            var myPalette = new MrPalette();
+            var myPic = document.images[0];
+            var options = {
+                threshold: 50,
+                maxNumColours: 8,
+                container: 'colourOut'
+            }
+            myPalette.generateColourPalette(myPic, options);          
+        }
+        
     </script>
 </body>
 </html>

@@ -20,7 +20,7 @@ function MrPalette(){
         
         var imageData = this.imageToCanvas(img);
         var colourData = this.getColours(imageData, options.threshold);
-        this.outputColourPalette(colourData, options.maxNumColours);
+        this.outputColourPalette(colourData, options.maxNumColours, options.container);
     };
     
     // draw the image to canvas - basically prepping it for image processing
@@ -42,17 +42,26 @@ function MrPalette(){
     // output the colour data to a canvas for display
     // colourData: the colour palette info
     // maxNumColours: specify the max number of colours to show
-    this.outputColourPalette = function(colourData, maxNumColours){
+    this.outputColourPalette = function(colourData, maxNumColours, container){
         var theCanvas = document.createElement("canvas");
-        document.body.appendChild(theCanvas);
+        
+        if(container){
+            document.getElementById(container).appendChild(theCanvas);
+        }else{
+            document.body.appendChild(theCanvas);
+        }
+        
         var theCtx = theCanvas.getContext('2d');
         this.colourOutCanvas = theCanvas;
         
-        theCanvas.width = colourData.length*25;
+        
         
         if(maxNumColours > colourData.length){
             maxNumColours = colourData.length;
         }
+        
+        theCanvas.width = maxNumColours*25;
+        theCanvas.height = 25;
         
         for(var i=0;i<maxNumColours;i++){
             theCtx.fillStyle = 'rgb(' + colourData[i].red + ',' +   

@@ -2,7 +2,9 @@ body
 {
     background-image:url('extra_clean_paper.png');
 }
-
+#mainContainer{
+    padding: 20px;
+}
 #dropContainer{
     background: #D1D1D1;
     border-style:dashed;
@@ -16,13 +18,30 @@ body
 
 #instructionContainer{
 	text-align: center;
+	padding-bottom: 25px;
 }
 #picContainer{
 	text-align: center;
 }
 
+#controls{
+    text-align: center;   
+}
+
+#colourOut{
+    margin: 0 auto;
+    width: 480px;
+    text-align: center;
+}
+
+#notes{
+    text-align: center;
+}
 .uploadImage{
     max-height: 310px;
     max-width: 470px;
 }
 
+h1{
+    text-align: center;
+}
