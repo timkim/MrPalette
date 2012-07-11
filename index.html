@@ -1,22 +1,75 @@
 <!DOCTYPE html>
 <html>
-  <head>
-  <script src="mrpalette.js" type="text/javascript"></script>
-  <title></title>
-
-	<meta charset="utf-8">
+<head>
+    <link rel="stylesheet" href="assets/style.css"/>
+    <script src="assets/mrpalette.js" type="text/javascript"></script>
+    
+    <title></title>
+    
+    <meta charset="utf-8">
     <script type="text/javascript">
     
-	function onBodyLoad(){		
-        var myPalette = new MrPalette();
-        var myPic = document.getElementById('img1');
-        myPalette.generateColourPalette(myPic);
-	}
-	     
+    function onBodyLoad(){
+       
+    }
+    
     </script>
-  </head>
-  <body onload="onBodyLoad()"> 
-  	<img id="img1" src="seagull.jpg"/>
+</head>
+<body onload="onBodyLoad()"> 
+    <div id="dropContainer"> 
+        <div id="picContainer"> </div>
+    </div>
+     <div id="instructionContainer">Drag and drop images in the box above.</div>
      
-  </body>
+    <script>
+        // taken from and modified slightly: http://www.html5rocks.com/en/tutorials/file/dndfiles/#toc-selecting-files-dnd
+        function handleFileSelect(evt) {
+            evt.stopPropagation();
+            evt.preventDefault();
+        
+            var files = evt.dataTransfer.files; // FileList object.
+        
+            // files is a FileList of File objects. List some properties.
+            for (var i = 0, f; f = files[i]; i++) {
+        
+            // Only process image files.
+            if (!f.type.match('image.*')) {
+                continue;
+            }
+        
+            var reader = new FileReader();
+            // Closure to capture the file information.
+            reader.onload = (function(theFile) {
+                return function(e) {
+                    var span = document.createElement('span');
+                    span.innerHTML = ['<img class="uploadImage" src="', e.target.result,'"/>'].join('');
+                    document.getElementById('picContainer').innerHTML = span.innerHTML;                   
+                };
+            })(f);
+        
+            reader.onloadend = function(){   
+                var myPalette = new MrPalette();
+                var myPic = document.images[0];
+                var options = {
+                    threshold: 50,
+                    maxNumColours: 8
+                }
+                myPalette.generateColourPalette(myPic, options);              
+            }
+            // Read in the image file as a data URL.
+            reader.readAsDataURL(f);            
+            }
+        }
+        
+        function handleDragOver(evt) {
+            evt.stopPropagation();
+            evt.preventDefault();
+            evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
+        }
+        
+        var dropContainer = document.getElementById('dropContainer');
+        dropContainer.addEventListener('dragover', handleDragOver, false);
+        dropContainer.addEventListener('drop', handleFileSelect, false);  
+    </script>
+</body>
 </html>

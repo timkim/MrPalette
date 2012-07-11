@@ -1,0 +1,28 @@
+body
+{
+    background-image:url('extra_clean_paper.png');
+}
+
+#dropContainer{
+    background: #D1D1D1;
+    border-style:dashed;
+    border-width:5px;
+    border-color: #A1A1A1;
+    border-radius: 15px;
+    margin: 0 auto;
+    width: 480px;
+    height: 320px;
+}
+
+#instructionContainer{
+	text-align: center;
+}
+#picContainer{
+	text-align: center;
+}
+
+.uploadImage{
+    max-height: 310px;
+    max-width: 470px;
+}
+
