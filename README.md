@@ -13,21 +13,17 @@ flag on your browser (I'll leave that up to you to figure out).
 
 Using your own image:
 ==========================================================================
-Currently the image is hardcoded so just change the refernce in the img
-src to point to whichever one you want. This will change in the future
-to allow drag/drop, file upload, or something generally cleaner.
+Just drag and drop an image from your desktop into the grey box!
 
 Controling how many colours are outputted:
 ==========================================================================
-The function generateColourPalette(imageData, threshold) is the main function
-that determines how many colours are outputted. Try setting the threshold to 
-a lower number to allow more colours and a higher number for less.
-
-Don't set it too low (less than 16) otherwise it might take awhile to 
-process.
-
-If you set it too high, you'll get less and less colours to point where 
-you might just get two.
+I'll be adding some html controls in a bit so you'll have to change the
+code. If you look up the generateButton.onclick function, you can see
+two parameters within the options object: threshold and maxNumColours. The
+threshold controls how closely it wants to sample colours that are similar
+(filters out a bit of noise) and the maxNumColours will return a set of 
+colours equal to or less than the number you specify. Usually lowering
+the threshold means more colours are sampled. 
 
 
 Author: Tim Kim
