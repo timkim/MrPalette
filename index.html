@@ -13,9 +13,13 @@
 <body> 
     <div id="mainContainer">
         <h1>MrPalette</h1>
-        <div id="dropContainer"> 
-            <div id="picContainer"> </div>
+        <div id="dropContainerTwo" class="drop"> 
+            <div id="picContainerTwo" class="pic"> </div>
         </div>
+
+        <div id="dropContainerOne" class="drop"> 
+            <div id="picContainerOne" class="pic"> </div>
+        </div>        
         
         <div id="instructionContainer">Drag and drop images in the box above to get the colour palette of the image.</div>
          
@@ -29,8 +33,9 @@
         <div id="notes"><p>Author: Tim Kim/@timkim</p></div>
     </div>
     <script>
+        // need to make this more modular
         // taken from and modified slightly: http://www.html5rocks.com/en/tutorials/file/dndfiles/#toc-selecting-files-dnd
-        function handleFileSelect(evt) {
+        function handleFileSelectOne(evt) {
             evt.stopPropagation();
             evt.preventDefault();
         
@@ -50,7 +55,37 @@
                 return function(e) {
                     var span = document.createElement('span');
                     span.innerHTML = ['<img class="uploadImage" src="', e.target.result,'"/>'].join('');
-                    document.getElementById('picContainer').innerHTML = span.innerHTML;                   
+                    document.getElementById('picContainerOne').innerHTML = span.innerHTML;                   
+                };
+            })(f);
+            
+            // Read in the image file as a data URL.
+            reader.readAsDataURL(f);            
+            }
+        }
+
+
+        function handleFileSelectTwo(evt) {
+            evt.stopPropagation();
+            evt.preventDefault();
+        
+            var files = evt.dataTransfer.files; // FileList object.
+        
+            // files is a FileList of File objects. List some properties.
+            for (var i = 0, f; f = files[i]; i++) {
+        
+            // Only process image files.
+            if (!f.type.match('image.*')) {
+                continue;
+            }
+        
+            var reader = new FileReader();
+            // Closure to capture the file information.
+            reader.onload = (function(theFile) {
+                return function(e) {
+                    var span = document.createElement('span');
+                    span.innerHTML = ['<img class="uploadImage" src="', e.target.result,'"/>'].join('');
+                    document.getElementById('picContainerTwo').innerHTML = span.innerHTML;                   
                 };
             })(f);
             
@@ -64,10 +99,16 @@
             evt.preventDefault();
             evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
         }
+ 
+ 
+         var dropContainerOne = document.getElementById('dropContainerOne');
+        dropContainerOne.addEventListener('dragover', handleDragOver, false);
+        dropContainerOne.addEventListener('drop', handleFileSelectOne, false); 
         
-        var dropContainer = document.getElementById('dropContainer');
-        dropContainer.addEventListener('dragover', handleDragOver, false);
-        dropContainer.addEventListener('drop', handleFileSelect, false); 
+        
+        var dropContainerTwo = document.getElementById('dropContainerTwo');
+        dropContainerTwo.addEventListener('dragover', handleDragOver, false);
+        dropContainerTwo.addEventListener('drop', handleFileSelectTwo, false); 
         
         var generateButton = document.getElementById('generateButton');
         generateButton.onclick = function(){
@@ -78,13 +119,16 @@
                 }
             }
             var myPalette = new MrPalette();
-            var myPic = document.images[0];
+            var myPicOne = document.images[0];
+            var myPicTwo = document.images[1];
+            /*
             var options = {
                 threshold: 50,
                 maxNumColours: 8,
                 container: 'colourOut'
             }
-            myPalette.generateColourPalette(myPic, options);          
+            */
+            myPalette.generateColourHistogram(myPicOne, myPicTwo);          
         }
         
     </script>

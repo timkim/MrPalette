@@ -2,7 +2,7 @@ function MrPalette(){
     // references to the canvas elements that we made should we need them
     this.colourInCanvas = null;
     this.colourOutCanvas = null;
-    
+   
     // img: is a reference to the img tag that holds the picture we want to get the colours from
     // threshold: controls how the algorithm averages out similar colours
     this.generateColourPalette = function(img, options){
@@ -21,6 +21,47 @@ function MrPalette(){
         var imageData = this.imageToCanvas(img);
         var colourData = this.getColours(imageData, options.threshold);
         this.outputColourPalette(colourData, options.maxNumColours, options.container);
+    };
+    
+    this.generateColourHistogram = function(imgOne, imgTwo){
+         var imageDataOne = this.imageToCanvas(imgOne);
+         var inImageHistogram = this.getColourHistogram(imageDataOne);
+         
+         var imageDataTwo = this.imageToCanvas(imgTwo);
+         var outImageHistogram = this.getColourHistogram(imageDataTwo);
+
+    };
+    
+    this.initHistogram = function(histogramObject){
+        for(var i=0;i<=255;i++){
+            histogramObject.histogramRed[i]=0;
+        }
+        histogramObject.histogramGreen = histogramObject.histogramGreen.concat(histogramObject.histogramRed);
+        histogramObject.histogramBlue = histogramObject.histogramBlue.concat(histogramObject.histogramRed);
+    };
+    
+    this.getColourHistogram = function(imageData){
+        var theHistogram = {
+            histogramRed : [],
+            histogramGreen : [],
+            histogramBlue : []
+         }; 
+         
+        this.initHistogram(theHistogram);
+        
+        var width = imageData.width, height = imageData.height;
+        for(var i=0;i<width;i++){
+            for(var j=0;j<height;j++){
+                var index = (i+j*width)*4;
+                var imageRed = imageData.data[index];
+                var imageGreen = imageData.data[index+1];
+                var imageBlue = imageData.data[index+2];
+                theHistogram.histogramRed[imageRed]++;
+                theHistogram.histogramGreen[imageGreen]++;
+                theHistogram.histogramBlue[imageBlue]++;
+            }
+        }   
+        return theHistogram;
     };
     
     // draw the image to canvas - basically prepping it for image processing
