@@ -24,12 +24,115 @@ function MrPalette(){
     };
     
     this.generateColourHistogram = function(imgOne, imgTwo){
-         var imageDataOne = this.imageToCanvas(imgOne);
-         var inImageHistogram = this.getColourHistogram(imageDataOne);
+        var imageDataOne = this.imageToCanvas(imgOne);
+        var inImageHistogram = this.getColourHistogram(imageDataOne);
          
-         var imageDataTwo = this.imageToCanvas(imgTwo);
-         var outImageHistogram = this.getColourHistogram(imageDataTwo);
+        var imageDataTwo = this.imageToCanvas(imgTwo);
+        var outImageHistogram = this.getColourHistogram(imageDataTwo);
 
+        var pdfOne = this.getPDF(inImageHistogram, imageDataOne.width*imageDataOne.height);
+        var pdfTwo = this.getPDF(outImageHistogram, imageDataTwo.width*imageDataTwo.height);
+        console.log('pdf done');
+        var cdfOne = this.getCDF(pdfOne);
+        var cdfTwo = this.getCDF(pdfTwo);
+        console.log('cdf done');
+        var LUT = this.getLUT(cdfOne,cdfTwo);
+        console.log('lut done');
+        var matchedImage = this.histogramMatch(imageDataOne, LUT);
+        
+        var matchCanvas = document.createElement("canvas");
+        matchCanvas.height = matchedImage.height;
+        matchCanvas.width = matchedImage.width;
+        document.body.appendChild(matchCanvas);     
+        var theCtx = matchCanvas.getContext('2d');
+        
+        theCtx.putImageData(matchedImage,0,0);
+    };
+    
+    this.getPDF = function(histogram,imgSize){
+        var thePDF = {
+            histogramRed : [],
+            histogramGreen : [],
+            histogramBlue : []            
+        };
+        this.initHistogram(thePDF);
+        
+        for(var i=0;i<=255;i++){
+            thePDF.histogramRed[i] = histogram.histogramRed[i]/imgSize;
+            thePDF.histogramGreen[i] = histogram.histogramGreen[i]/imgSize;
+            thePDF.histogramBlue[i] = histogram.histogramBlue[i]/imgSize;
+        }
+        return thePDF;
+    };
+    
+    this.getCDF = function(pdfHistogram){
+        var theCDF = {
+            histogramRed : [],
+            histogramGreen : [],
+            histogramBlue : []          
+        };
+        
+        this.initHistogram(theCDF);
+        var runningRed = 0;
+        var runningGreen = 0;
+        var runningBlue = 0;
+        for(var i=0;i<=255;i++){
+            runningRed += pdfHistogram.histogramRed[i];
+            runningGreen += pdfHistogram.histogramGreen[i];
+            runningBlue += pdfHistogram.histogramBlue[i];
+            theCDF.histogramRed[i] += runningRed;
+            theCDF.histogramGreen[i] += runningGreen;
+            theCDF.histogramBlue[i] += runningBlue;
+        }
+        return theCDF;
+    };
+    
+    this.getLUT = function(cdfOne, cdfTwo){
+        var theLUT = {
+            histogramRed : [],
+            histogramGreen : [],
+            histogramBlue : []         
+        };
+        
+        this.initHistogram(theLUT);
+        var gRed = 0;
+        var gGreen = 0;
+        var gBlue = 0;
+        
+        for(var i=0;i<=255;i++){
+            gRed = 0;
+            gGreen = 0;
+            gBlue = 0;
+            while(cdfTwo.histogramRed[gRed] < cdfOne.histogramRed[i] && gRed<=255){
+                gRed++;
+            }
+            theLUT.histogramRed[i] = gRed;
+            
+            while(cdfTwo.histogramGreen[gGreen] < cdfOne.histogramGreen[i] && gGreen<=255){
+                gGreen++;
+            }
+            theLUT.histogramGreen[i] = gGreen;
+            
+            while(cdfTwo.histogramBlue[gBlue] < cdfOne.histogramBlue[i] && gBlue<=255){
+                gBlue++;
+            }
+            theLUT.histogramBlue[i] = gBlue;
+        }
+        return theLUT;
+    };
+    
+    this.histogramMatch = function(imageData,LUT){
+        var width = imageData.width, height = imageData.height;
+        for(var i=0;i<width;i++){
+            for(var j=0;j<height;j++){
+                var index = (i+j*width)*4;
+                imageData.data[index] = LUT.histogramRed[imageData.data[index]];
+                imageData.data[index+1] = LUT.histogramGreen[imageData.data[index+1]];
+                imageData.data[index+2] = LUT.histogramBlue[imageData.data[index+2]];
+                
+            }
+        }
+        return imageData;
     };
     
     this.initHistogram = function(histogramObject){
