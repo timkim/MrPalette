@@ -2,7 +2,64 @@ function MrPalette(){
     // references to the canvas elements that we made should we need them
     this.colourInCanvas = null;
     this.colourOutCanvas = null;
-   
+    
+    // a better idea might be to have one master canvas tag to push/pull pixels from
+    // as opposed to creating multiple hidden ones
+    this.masterCanvas = null;
+    this.masterCtx = null;
+
+    
+    // top app level basic functions
+    // init the master canvas for manipulation
+    this.init = (function(context){
+        if(!context.masterCanvas){
+            context.masterCanvas = document.createElement("canvas");
+            document.body.appendChild(context.masterCanvas);
+            context.masterCanvas.setAttribute("style","display:none");
+            context.masterCtx = context.masterCanvas.getContext('2d'); 
+        }
+    }(this));
+    
+    // get the image data from the master canvas
+    this.getImageData = function(img){
+        if(this.masterCanvas && this.masterCtx && img){
+            this.resetCanvas();
+            this.masterCanvas.width = img.width;
+            this.masterCanvas.height = img.height;
+            this.masterCtx.drawImage(img,0,0,this.masterCanvas.width, this.masterCanvas.height);
+            return this.masterCtx.getImageData(0,0,this.masterCanvas.width, this.masterCanvas.height);   
+        }
+    };
+    
+    // reset the canvas for future manipulations
+    this.resetCanvas = function(){
+        if(this.masterCanvas && this.masterCtx){
+            // from: http://stackoverflow.com/questions/2142535/how-to-clear-the-canvas-for-redrawing
+            // Store the current transformation matrix
+            this.masterCtx.save();
+            
+            // Use the identity matrix while clearing the canvas
+            this.masterCtx.setTransform(1, 0, 0, 1, 0, 0);
+            this.masterCtx.clearRect(0, 0, this.masterCanvas.width, this.masterCanvas.height);
+            
+            // Restore the transform
+            this.masterCtx.restore(); 
+        }
+    };
+    
+    // output the image data to an existing img tag
+    this.outputImageData = function(imageData, imgContainer){
+        if(this.masterCanvas && this.masterCtx && imgContainer){
+            this.resetCanvas();   
+            this.masterCanvas.width = imageData.width;
+            this.masterCanvas.height = imageData.height;
+            this.masterCtx.putImageData(imageData, 0, 0);
+            var url = this.masterCanvas.toDataURL();
+            imgContainer.src = url;
+        }
+    };
+    
+    // top image procession functions
     // img: is a reference to the img tag that holds the picture we want to get the colours from
     // threshold: controls how the algorithm averages out similar colours
     this.generateColourPalette = function(img, options){
@@ -18,16 +75,19 @@ function MrPalette(){
             options.maxNumColours = 6;
         }
         
-        var imageData = this.imageToCanvas(img);
+        var imageData = this.getImageData(img);
         var colourData = this.getColours(imageData, options.threshold);
-        this.outputColourPalette(colourData, options.maxNumColours, options.container);
+        // need function to get back canvas palette stuff!
+        //this.outputImageData
+        //this.outputColourPalette(colourData, options.maxNumColours, options.container);
     };
     
-    this.generateColourHistogram = function(imgOne, imgTwo){
-        var imageDataOne = this.imageToCanvas(imgOne);
+    
+    this.generateColourHistogram = function(imgOne, imgTwo, imgOut){
+        var imageDataOne = this.getImageData(imgOne);
         var inImageHistogram = this.getColourHistogram(imageDataOne);
          
-        var imageDataTwo = this.imageToCanvas(imgTwo);
+        var imageDataTwo = this.getImageData(imgTwo);
         var outImageHistogram = this.getColourHistogram(imageDataTwo);
 
         var pdfOne = this.getPDF(inImageHistogram, imageDataOne.width*imageDataOne.height);
@@ -38,8 +98,11 @@ function MrPalette(){
         console.log('cdf done');
         var LUT = this.getLUT(cdfOne,cdfTwo);
         console.log('lut done');
-        var matchedImage = this.histogramMatch(imageDataOne, LUT);
         
+        var matchedImage = this.histogramMatch(imageDataOne, LUT);
+        this.outputImageData(matchedImage, imgOut);
+        
+        /*
         var matchCanvas = document.createElement("canvas");
         matchCanvas.height = matchedImage.height;
         matchCanvas.width = matchedImage.width;
@@ -47,6 +110,7 @@ function MrPalette(){
         var theCtx = matchCanvas.getContext('2d');
         
         theCtx.putImageData(matchedImage,0,0);
+        */
     };
     
     this.getPDF = function(histogram,imgSize){
@@ -166,6 +230,7 @@ function MrPalette(){
         }   
         return theHistogram;
     };
+    
     
     // draw the image to canvas - basically prepping it for image processing
     // img is a reference to the tag that holds the pic

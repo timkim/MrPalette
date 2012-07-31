@@ -1,136 +1,106 @@
 <!DOCTYPE html>
-<html>
-<head>
-    <link rel="stylesheet" href="assets/style.css"/>
-    <script src="assets/mrpalette.js" type="text/javascript"></script>
-    
-    <title></title>
-    
+<html lang="en">
+  <head>
     <meta charset="utf-8">
-    <script type="text/javascript">
-    </script>
-</head>
-<body> 
-    <div id="mainContainer">
-        <h1>MrPalette</h1>
-        <div id="dropContainerTwo" class="drop"> 
-            <div id="picContainerTwo" class="pic"> </div>
-        </div>
+    <title>Mr. Palette</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Image Processing Tool">
+    <meta name="author" content="Tim Kim">
 
-        <div id="dropContainerOne" class="drop"> 
-            <div id="picContainerOne" class="pic"> </div>
-        </div>        
-        
-        <div id="instructionContainer">Drag and drop images in the box above to get the colour palette of the image.</div>
+    <!-- Le styles -->
+    <link href="assets/css/bootstrap.css" rel="stylesheet">
+    <style type="text/css">
+      body {
+        padding-top: 60px;
+        padding-bottom: 40px;
+      }
+      .sidebar-nav {
+        padding: 9px 0;
+      }
+    </style>
+    <link href="assets/css/bootstrap-responsive.css" rel="stylesheet">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- Le fav and touch icons -->
+    <link rel="shortcut icon" href="assets/ico/favicon.ico">
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="assets/ico/apple-touch-icon-57-precomposed.png">
+    <script src="assets/js/jquery.js"></script>
+    <script src="assets/js/bootstrap.js"></script>
+    <script src="assets/js/mrpalette.js"></script>
+    <script src="assets/js/app.js"></script>
+    
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container-fluid">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand" href="#">Mr. Palette</a>
          
-        <div id="controls"> 
-            
-            <button id="generateButton" type="button">Generate Palette</button>
         </div>
-        
-        <div id="colourOut"> </div>
-        
-        <div id="notes"><p>Author: Tim Kim/@timkim</p></div>
+      </div>
     </div>
-    <script>
-        // need to make this more modular
-        // taken from and modified slightly: http://www.html5rocks.com/en/tutorials/file/dndfiles/#toc-selecting-files-dnd
-        function handleFileSelectOne(evt) {
-            evt.stopPropagation();
-            evt.preventDefault();
-        
-            var files = evt.dataTransfer.files; // FileList object.
-        
-            // files is a FileList of File objects. List some properties.
-            for (var i = 0, f; f = files[i]; i++) {
-        
-            // Only process image files.
-            if (!f.type.match('image.*')) {
-                continue;
-            }
-        
-            var reader = new FileReader();
-            // Closure to capture the file information.
-            reader.onload = (function(theFile) {
-                return function(e) {
-                    var span = document.createElement('span');
-                    span.innerHTML = ['<img class="uploadImage" src="', e.target.result,'"/>'].join('');
-                    document.getElementById('picContainerOne').innerHTML = span.innerHTML;                   
-                };
-            })(f);
-            
-            // Read in the image file as a data URL.
-            reader.readAsDataURL(f);            
-            }
-        }
 
+    <div class="container-fluid">
+      <div class="row-fluid">
+        <div class="span3">
+          <div class="well sidebar-nav">
+            <ul class="nav nav-list">
+              <li class="nav-header">Action:</li>
+              <li class="active"><a href="#">Match Histogram</a></li>
+            </ul>
+          </div><!--/.well -->
+        </div><!--/span-->
+        <div class="span9">
+          <div class="hero-unit">
+            <div class="well dropzone">
+                <div class="pic">
+                
+                </div>
+                <div class="bgText">
+                    Drag and drop photos here
+                </div>
+            </div>
+            <div class="well dropzone">
+                <div class="pic">
+                
+                </div>
+                <div class="bgText">
+                    Drag and drop photos here
+                </div>
+            </div>
+            <div class="well">
+                <div class="pic output">
+                    <img id="theOutput" src=""/>
+                    Output
+                </div>
+            </div>
+                <button id="generateButton" class="btn" type="button">Match Histogram</button>
+          </div>
+          
 
-        function handleFileSelectTwo(evt) {
-            evt.stopPropagation();
-            evt.preventDefault();
-        
-            var files = evt.dataTransfer.files; // FileList object.
-        
-            // files is a FileList of File objects. List some properties.
-            for (var i = 0, f; f = files[i]; i++) {
-        
-            // Only process image files.
-            if (!f.type.match('image.*')) {
-                continue;
-            }
-        
-            var reader = new FileReader();
-            // Closure to capture the file information.
-            reader.onload = (function(theFile) {
-                return function(e) {
-                    var span = document.createElement('span');
-                    span.innerHTML = ['<img class="uploadImage" src="', e.target.result,'"/>'].join('');
-                    document.getElementById('picContainerTwo').innerHTML = span.innerHTML;                   
-                };
-            })(f);
-            
-            // Read in the image file as a data URL.
-            reader.readAsDataURL(f);            
-            }
-        }
-        
-        function handleDragOver(evt) {
-            evt.stopPropagation();
-            evt.preventDefault();
-            evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
-        }
- 
- 
-         var dropContainerOne = document.getElementById('dropContainerOne');
-        dropContainerOne.addEventListener('dragover', handleDragOver, false);
-        dropContainerOne.addEventListener('drop', handleFileSelectOne, false); 
-        
-        
-        var dropContainerTwo = document.getElementById('dropContainerTwo');
-        dropContainerTwo.addEventListener('dragover', handleDragOver, false);
-        dropContainerTwo.addEventListener('drop', handleFileSelectTwo, false); 
-        
-        var generateButton = document.getElementById('generateButton');
-        generateButton.onclick = function(){
-            var colourOut = document.getElementById('colourOut');
-            if(colourOut.hasChildNodes()){
-                while(colourOut.childNodes.length>0){
-                    colourOut.removeChild(colourOut.firstChild);
-                }
-            }
-            var myPalette = new MrPalette();
-            var myPicOne = document.images[0];
-            var myPicTwo = document.images[1];
-            /*
-            var options = {
-                threshold: 50,
-                maxNumColours: 8,
-                container: 'colourOut'
-            }
-            */
-            myPalette.generateColourHistogram(myPicOne, myPicTwo);          
-        }
-        
-    </script>
-</body>
+        </div><!--/span-->
+      </div><!--/row-->
+
+      <hr>
+
+      <footer>
+        <p>&copy; Tim Kim</p>
+      </footer>
+
+    </div>
+  </body>
 </html>
