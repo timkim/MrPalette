@@ -83,12 +83,27 @@ function MrPalette(){
     };
     
     
-    this.generateColourHistogram = function(imgOne, imgTwo, imgOut){
+    this.generateColourHistogram = function(imgOne, imgTwo, imgOut, options){
+        if(!options){
+            options = {};
+        }
+        
+        if(!options.type){
+            options.type = 'rgb';
+        }
+        
+        if(!options.histogramBucketSize){
+            options.histogramBucketSize = 256;
+        }
+        
+        // what I really need is a histogram object that takes in image data
+        // then attach pdf/cdf functions on it
+        
         var imageDataOne = this.getImageData(imgOne);
-        var inImageHistogram = this.getColourHistogram(imageDataOne);
+        var inImageHistogram = this.getRGBHistogram(imageDataOne);
          
         var imageDataTwo = this.getImageData(imgTwo);
-        var outImageHistogram = this.getColourHistogram(imageDataTwo);
+        var outImageHistogram = this.getRGBHistogram(imageDataTwo);
 
         var pdfOne = this.getPDF(inImageHistogram, imageDataOne.width*imageDataOne.height);
         var pdfTwo = this.getPDF(outImageHistogram, imageDataTwo.width*imageDataTwo.height);
@@ -113,52 +128,41 @@ function MrPalette(){
         */
     };
     
-    this.getPDF = function(histogram,imgSize){
+    this.getPDF = function(theHistogram,imgSize){
         var thePDF = {
-            histogramRed : [],
-            histogramGreen : [],
-            histogramBlue : []            
+            histogramRed : histogram(256),
+            histogramGreen : histogram(256),
+            histogramBlue : histogram(256)            
         };
-        this.initHistogram(thePDF);
         
-        for(var i=0;i<=255;i++){
-            thePDF.histogramRed[i] = histogram.histogramRed[i]/imgSize;
-            thePDF.histogramGreen[i] = histogram.histogramGreen[i]/imgSize;
-            thePDF.histogramBlue[i] = histogram.histogramBlue[i]/imgSize;
-        }
+        thePDF.histogramRed = getPDF(theHistogram.histogramRed, imgSize);
+        thePDF.histogramGreen = getPDF(theHistogram.histogramGreen, imgSize);
+        thePDF.histogramBlue = getPDF(theHistogram.histogramBlue, imgSize);
+        
         return thePDF;
     };
     
     this.getCDF = function(pdfHistogram){
         var theCDF = {
-            histogramRed : [],
-            histogramGreen : [],
-            histogramBlue : []          
+            histogramRed : histogram(256),
+            histogramGreen : histogram(256),
+            histogramBlue : histogram(256)           
         };
         
-        this.initHistogram(theCDF);
-        var runningRed = 0;
-        var runningGreen = 0;
-        var runningBlue = 0;
-        for(var i=0;i<=255;i++){
-            runningRed += pdfHistogram.histogramRed[i];
-            runningGreen += pdfHistogram.histogramGreen[i];
-            runningBlue += pdfHistogram.histogramBlue[i];
-            theCDF.histogramRed[i] += runningRed;
-            theCDF.histogramGreen[i] += runningGreen;
-            theCDF.histogramBlue[i] += runningBlue;
-        }
+        theCDF.histogramRed = getCDF(pdfHistogram.histogramRed);
+        theCDF.histogramGreen = getCDF(pdfHistogram.histogramGreen);
+        theCDF.histogramBlue = getCDF(pdfHistogram.histogramBlue);
+        
         return theCDF;
     };
     
     this.getLUT = function(cdfOne, cdfTwo){
         var theLUT = {
-            histogramRed : [],
-            histogramGreen : [],
-            histogramBlue : []         
+            histogramRed : histogram(256),
+            histogramGreen : histogram(256),
+            histogramBlue : histogram(256)         
         };
         
-        this.initHistogram(theLUT);
         var gRed = 0;
         var gGreen = 0;
         var gBlue = 0;
@@ -199,22 +203,12 @@ function MrPalette(){
         return imageData;
     };
     
-    this.initHistogram = function(histogramObject){
-        for(var i=0;i<=255;i++){
-            histogramObject.histogramRed[i]=0;
-        }
-        histogramObject.histogramGreen = histogramObject.histogramGreen.concat(histogramObject.histogramRed);
-        histogramObject.histogramBlue = histogramObject.histogramBlue.concat(histogramObject.histogramRed);
-    };
-    
-    this.getColourHistogram = function(imageData){
+    this.getRGBHistogram = function(imageData){
         var theHistogram = {
-            histogramRed : [],
-            histogramGreen : [],
-            histogramBlue : []
+            histogramRed : histogram(256),
+            histogramGreen : histogram(256),
+            histogramBlue : histogram(256)
          }; 
-         
-        this.initHistogram(theHistogram);
         
         var width = imageData.width, height = imageData.height;
         for(var i=0;i<width;i++){
@@ -231,6 +225,25 @@ function MrPalette(){
         return theHistogram;
     };
     
+    this.getLuminanceHistogram = function(histogramObject){
+        var theHistogram = {
+            histogramLuminance : histogram(256)
+         }; 
+        
+        var width = imageData.width, height = imageData.height;
+        for(var i=0;i<width;i++){
+            for(var j=0;j<height;j++){
+                var index = (i+j*width)*4;
+                var imageRed = imageData.data[index];
+                var imageGreen = imageData.data[index+1];
+                var imageBlue = imageData.data[index+2];
+                theHistogram.histogramRed[imageRed]++;
+                theHistogram.histogramGreen[imageGreen]++;
+                theHistogram.histogramBlue[imageBlue]++;
+            }
+        }   
+        return theHistogram;    
+    };
     
     // draw the image to canvas - basically prepping it for image processing
     // img is a reference to the tag that holds the pic
