@@ -43,24 +43,19 @@ function init(){
     $('.dropzone').on('dragover', handleDragOver);
     $('.dropzone').on('drop', handleFileSelectOne);
     
-    $('#generateButton').click(function(){
-        
-        //var colourOut = document.getElementById('colourOut');
-       // if(colourOut.hasChildNodes()){
-           // while(colourOut.childNodes.length>0){
-                //colourOut.removeChild(colourOut.firstChild);
-            //}
-        //}
+    $('#generateColourButton').click(function(){
         var myPalette = new MrPalette();
         var myPicOne = $('.uploadImage')[0];
         var myPicTwo = $('.uploadImage')[1];
         
-        //var options = {
-            //threshold: 50,
-            //maxNumColours: 8,
-            //container: 'colourOut'
-       // }
-        
         myPalette.generateColourHistogram(myPicOne, myPicTwo, $('#theOutput')[0]);          
-    });    
+    });   
+    
+    $('#generateLuminenceButton').click(function(){
+        var myPalette = new MrPalette();
+        var myPicOne = $('.uploadImage')[0];
+        var myPicTwo = $('.uploadImage')[1];
+        
+        myPalette.generateLuminenceHistogram(myPicOne, myPicTwo, $('#theOutput')[0]);          
+    });   
 }

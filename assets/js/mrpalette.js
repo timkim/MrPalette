@@ -96,39 +96,54 @@ function MrPalette(){
             options.histogramBucketSize = 256;
         }
         
-        // what I really need is a histogram object that takes in image data
-        // then attach pdf/cdf functions on it
-        
         var imageDataOne = this.getImageData(imgOne);
         var inImageHistogram = this.getRGBHistogram(imageDataOne);
          
         var imageDataTwo = this.getImageData(imgTwo);
         var outImageHistogram = this.getRGBHistogram(imageDataTwo);
 
-        var pdfOne = this.getPDF(inImageHistogram, imageDataOne.width*imageDataOne.height);
-        var pdfTwo = this.getPDF(outImageHistogram, imageDataTwo.width*imageDataTwo.height);
+        var pdfOne = this.getRGBPDF(inImageHistogram, imageDataOne.width*imageDataOne.height);
+        var pdfTwo = this.getRGBPDF(outImageHistogram, imageDataTwo.width*imageDataTwo.height);
         console.log('pdf done');
-        var cdfOne = this.getCDF(pdfOne);
-        var cdfTwo = this.getCDF(pdfTwo);
+        var cdfOne = this.getRGBCDF(pdfOne);
+        var cdfTwo = this.getRGBCDF(pdfTwo);
         console.log('cdf done');
+        var LUT = this.getRGBLUT(cdfOne,cdfTwo);
+        console.log('lut done');
+        
+        var matchedImage = this.histogramRGBMatch(imageDataOne, LUT);
+        this.outputImageData(matchedImage, imgOut);
+        
+    };
+    
+    this.generateLuminenceHistogram = function(imgOne, imgTwo, imgOut, options){
+        if(!options){
+            options = {};
+        }
+        
+        var imageDataOne = this.getImageData(imgOne);
+        var inImageHistogram = this.getLuminanceHistogram(imageDataOne);
+         
+        var imageDataTwo = this.getImageData(imgTwo);
+        var outImageHistogram = this.getLuminanceHistogram(imageDataTwo);
+        
+        var pdfOne = getPDF(inImageHistogram, imageDataOne.width*imageDataOne.height);
+        var pdfTwo = getPDF(outImageHistogram, imageDataTwo.width*imageDataTwo.height);
+        console.log('pdf done');
+        
+        var cdfOne = getCDF(pdfOne);
+        var cdfTwo = getCDF(pdfTwo);
+        console.log('cdf done');
+        
         var LUT = this.getLUT(cdfOne,cdfTwo);
         console.log('lut done');
         
         var matchedImage = this.histogramMatch(imageDataOne, LUT);
         this.outputImageData(matchedImage, imgOut);
         
-        /*
-        var matchCanvas = document.createElement("canvas");
-        matchCanvas.height = matchedImage.height;
-        matchCanvas.width = matchedImage.width;
-        document.body.appendChild(matchCanvas);     
-        var theCtx = matchCanvas.getContext('2d');
-        
-        theCtx.putImageData(matchedImage,0,0);
-        */
     };
     
-    this.getPDF = function(theHistogram,imgSize){
+    this.getRGBPDF = function(theHistogram,imgSize){
         var thePDF = {
             histogramRed : histogram(256),
             histogramGreen : histogram(256),
@@ -142,7 +157,7 @@ function MrPalette(){
         return thePDF;
     };
     
-    this.getCDF = function(pdfHistogram){
+    this.getRGBCDF = function(pdfHistogram){
         var theCDF = {
             histogramRed : histogram(256),
             histogramGreen : histogram(256),
@@ -156,7 +171,7 @@ function MrPalette(){
         return theCDF;
     };
     
-    this.getLUT = function(cdfOne, cdfTwo){
+    this.getRGBLUT = function(cdfOne, cdfTwo){
         var theLUT = {
             histogramRed : histogram(256),
             histogramGreen : histogram(256),
@@ -167,7 +182,8 @@ function MrPalette(){
         var gGreen = 0;
         var gBlue = 0;
         
-        for(var i=0;i<=255;i++){
+        var theLength = cdfOne.histogramRed.length;
+        for(var i=0;i<theLength;i++){
             gRed = 0;
             gGreen = 0;
             gBlue = 0;
@@ -188,8 +204,23 @@ function MrPalette(){
         }
         return theLUT;
     };
+
+    this.getLUT = function(cdfOne, cdfTwo){
+        var theLUT = histogram(256);
+        
+        var gLumin = 0;
+        var theLength = cdfOne.length;
+        for(var i=0;i<theLength;i++){
+            gLumin = 0;
+            while(cdfTwo[gLumin] < cdfOne[i] && gLumin<=255){
+                gLumin++;
+            }
+            theLUT[i] = gLumin;
+        }
+        return theLUT;
+    };
     
-    this.histogramMatch = function(imageData,LUT){
+    this.histogramRGBMatch = function(imageData,LUT){
         var width = imageData.width, height = imageData.height;
         for(var i=0;i<width;i++){
             for(var j=0;j<height;j++){
@@ -198,6 +229,19 @@ function MrPalette(){
                 imageData.data[index+1] = LUT.histogramGreen[imageData.data[index+1]];
                 imageData.data[index+2] = LUT.histogramBlue[imageData.data[index+2]];
                 
+            }
+        }
+        return imageData;
+    };
+
+    this.histogramMatch = function(imageData,LUT){
+        var width = imageData.width, height = imageData.height;
+        for(var i=0;i<width;i++){
+            for(var j=0;j<height;j++){
+                var index = (i+j*width)*4;
+                imageData.data[index] = LUT[imageData.data[index]];
+                imageData.data[index+1] = LUT[imageData.data[index+1]];
+                imageData.data[index+2] = LUT[imageData.data[index+2]];
             }
         }
         return imageData;
@@ -225,11 +269,9 @@ function MrPalette(){
         return theHistogram;
     };
     
-    this.getLuminanceHistogram = function(histogramObject){
-        var theHistogram = {
-            histogramLuminance : histogram(256)
-         }; 
-        
+    this.getLuminanceHistogram = function(imageData){
+        var theHistogram = histogram(256)
+         
         var width = imageData.width, height = imageData.height;
         for(var i=0;i<width;i++){
             for(var j=0;j<height;j++){
@@ -237,9 +279,10 @@ function MrPalette(){
                 var imageRed = imageData.data[index];
                 var imageGreen = imageData.data[index+1];
                 var imageBlue = imageData.data[index+2];
-                theHistogram.histogramRed[imageRed]++;
-                theHistogram.histogramGreen[imageGreen]++;
-                theHistogram.histogramBlue[imageBlue]++;
+                var greyscale = Math.round((0.2126 * imageRed) + (0.7152 * imageGreen) + (0.0722 * imageBlue));
+                
+                // 0.2126 R + 0.7152 G + 0.0722 B
+                theHistogram[greyscale]++;
             }
         }   
         return theHistogram;    
