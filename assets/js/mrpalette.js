@@ -143,6 +143,13 @@ function MrPalette(){
         
     };
     
+    this.doEdgeDetect = function(img, size, matrix){
+         var imageData = this.getImageData(img);
+         var imageData2 = this.getImageData(img);
+         var imageOut = this.applyConvolutionMatrix(imageData, imageData2, size, matrix);
+         this.outputImageData(imageOut, $('#theOutput')[0]);
+    };
+    
     this.getRGBPDF = function(theHistogram,imgSize){
         var thePDF = {
             histogramRed : histogram(256),
@@ -472,4 +479,74 @@ function MrPalette(){
             }
         }  
     };
+    
+    this.applyConvolutionMatrix = function(imgIn, imgOut, kernalSize, matrix){     
+        var width = imgIn.width, height = imgIn.height;
+        for(var i=0;i<width;i++){
+            for(var j=0;j<height;j++){
+                
+                var radius = Math.floor(kernalSize/2);
+                var offsetWidth = width - (i+kernalSize);
+                var offsetHeight = height - (j+kernalSize);
+                var windowLeft = 0;
+                var windowTop = 0;
+                
+                var currentIndex = (i+j*width)*4;
+                
+                var avgImageRed = 0, avgImageGreen = 0, avgImageBlue = 0;
+      
+                for(var k=0;k<kernalSize;k++){
+                    for(var l=0;l<kernalSize;l++){
+    
+                        // should wrap around
+                        
+                        if(offsetWidth < 0 ){
+                            windowLeft = k + i + offsetWidth;
+                        }else{
+                            windowLeft = k + i;
+                        }
+                        
+                        if(offsetHeight < 0){
+                            windowTop = j + l + offsetHeight;
+                        }else{
+                            windowTop = j + l;
+                        }
+                        
+                        if(windowLeft - radius > 0) {
+                            windowLeft -= radius;
+                        }else{
+                            windowLeft = 0;
+                        }
+                        
+                        if(windowTop - radius > 0){
+                            windowTop -= radius;
+                        }else{
+                            windowTop = 0;
+                        }
+                        
+                        var windowIndex = (windowLeft+windowTop*width)*4;
+                        var matrixIndex = (k+l*kernalSize);
+
+                        avgImageRed += imgIn.data[windowIndex] * matrix[matrixIndex];
+                        avgImageGreen += imgIn.data[windowIndex+1] * matrix[matrixIndex];
+                        avgImageBlue += imgIn.data[windowIndex+2] * matrix[matrixIndex];
+                    }
+                }
+                
+                imgOut.data[currentIndex] = this.boundResult(avgImageRed);
+                imgOut.data[currentIndex+1] = this.boundResult(avgImageGreen);
+                imgOut.data[currentIndex+2] = this.boundResult(avgImageBlue);
+            }
+        }      
+        return imgOut;
+    };
+    
+    this.boundResult = function(pixelValue){
+        if(pixelValue < 0){
+            pixelValue = 0;
+        }else if(pixelValue >255){
+            pixelValue = 255;
+        }
+        return pixelValue;
+    }
 }
